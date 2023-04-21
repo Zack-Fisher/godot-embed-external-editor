@@ -7,31 +7,34 @@
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/godot.hpp>
 
-#include "winapi.hpp"
+#include "embed_api.h"
+
+// use the different implementations of EmbedAPI methods depending on the target OS.
+
+EmbedAPI* _embed_api;
 
 using namespace godot;
 
-static WinAPI *_win_api;
-
 void gdextension_initialize(ModuleInitializationLevel p_level)
 {
-	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
-	{
-		ClassDB::register_class<WinAPI>();
+    if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
+    {
+        ClassDB::register_class<EmbedAPI>();
 
-		_win_api = memnew(WinAPI);
-		Engine::get_singleton()->register_singleton("WinAPI", WinAPI::get_singleton());
-	}
+        _embed_api = memnew(EmbedAPI);
+        Engine::get_singleton()->register_singleton("EmbedAPI", EmbedAPI::get_singleton());
+    }
 }
 
 void gdextension_terminate(ModuleInitializationLevel p_level)
 {
-	if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
-	{
-		Engine::get_singleton()->unregister_singleton("WinAPI");
-		memdelete(_win_api);
-	}
+    if (p_level == MODULE_INITIALIZATION_LEVEL_SCENE)
+    {
+        Engine::get_singleton()->unregister_singleton("EmbedAPI");
+        memdelete(_embed_api);
+    }
 }
+
 
 extern "C"
 {

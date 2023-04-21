@@ -1,4 +1,4 @@
-#include "winapi.hpp"
+#include "embed_api.h"
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
@@ -9,33 +9,17 @@
 #include <godot_cpp/classes/project_settings.hpp>
 #include <godot_cpp/classes/display_server.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/variant/rect2i.hpp>
 
 using namespace godot;
 
-WinAPI *WinAPI::singleton = nullptr;
-
-void WinAPI::_bind_methods()
-{
-	ClassDB::bind_method(D_METHOD("window_get_parent", "child"), &WinAPI::window_get_parent);
-	ClassDB::bind_method(D_METHOD("window_get_vscode_hwnd"), &WinAPI::window_get_vscode_hwnd);
-	ClassDB::bind_method(D_METHOD("window_set_rect", "hwnd", "rect", "flags"), &WinAPI::window_set_rect);
-	ClassDB::bind_method(D_METHOD("window_set_parent", "child", "new_parent"), &WinAPI::window_set_parent);
-	ClassDB::bind_method(D_METHOD("window_set_visible", "window", "visible"), &WinAPI::window_set_visible);
-	ClassDB::bind_method(D_METHOD("window_allow_resizing", "window", "resizing"), &WinAPI::window_allow_resizing);
-}
-
-WinAPI *WinAPI::get_singleton()
-{
-	return singleton;
-}
-
-WinAPI::WinAPI()
+EmbedAPI::EmbedAPI()
 {
 	ERR_FAIL_COND(singleton != nullptr);
 	singleton = this;
 }
 
-WinAPI::~WinAPI()
+EmbedAPI::~EmbedAPI()
 {
 	ERR_FAIL_COND(singleton != this);
 	singleton = nullptr;
@@ -83,7 +67,7 @@ BOOL CALLBACK EnumExternalEditorCallback(HWND hwnd, LPARAM lparam) {
 	return TRUE;
 }
 
-uint64_t WinAPI::window_get_vscode_hwnd() const {
+uint64_t EmbedAPI::window_get_vscode_hwnd() const {
 	HWND editor = nullptr;
 	// This only iterates over top-level windows, so already-captured editor is not included.
 
@@ -95,23 +79,23 @@ uint64_t WinAPI::window_get_vscode_hwnd() const {
 	return (uint64_t)editor;
 }
 
-void WinAPI::window_set_rect(uint64_t hwnd, Rect2i rect, uint64_t flags) {
+void EmbedAPI::window_set_rect(uint64_t hwnd, Rect2i rect, uint64_t flags) {
 	SetWindowPos((HWND)hwnd, (HWND)0, rect.position.x, rect.position.y, rect.size.x, rect.size.y, flags);
 }
 
-uint64_t WinAPI::window_get_parent(uint64_t child) const {
+uint64_t EmbedAPI::window_get_parent(uint64_t child) const {
 	return (uint64_t)GetParent((HWND)child);
 }
 
-void WinAPI::window_set_parent(uint64_t child, uint64_t new_parent) {
+void EmbedAPI::window_set_parent(uint64_t child, uint64_t new_parent) {
 	SetParent((HWND)child, (HWND)new_parent);
 }
 
-void WinAPI::window_set_visible(uint64_t child, bool visible) {
+void EmbedAPI::window_set_visible(uint64_t child, bool visible) {
 	ShowWindowAsync((HWND)child, visible ? SW_SHOWNORMAL : SW_HIDE);
 }
 
-void WinAPI::window_allow_resizing(uint64_t child, bool resizing) {
+void EmbedAPI::window_allow_resizing(uint64_t child, bool resizing) {
 	LONG current_style = GetWindowLongW((HWND)child, GWL_STYLE);
 	// TODO: Remember old window long (e.g. native vs custom titleBarStyle of vscode)
 	// TODO: When resizing=true, it does not refresh the window rendering until you minimize and restore

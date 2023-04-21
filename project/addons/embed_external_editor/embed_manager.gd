@@ -36,7 +36,7 @@ func set_attach_enabled(enabled: bool):
 
 
 func _check_embed():
-	var new_hwnd = WinAPI.window_get_vscode_hwnd()
+	var new_hwnd = EmbedAPI.window_get_vscode_hwnd()
 	if new_hwnd == embedded.hwnd or new_hwnd == 0:
 		# no new window found, or still same window id as before
 		return
